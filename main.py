@@ -1,4 +1,4 @@
-from product import Product
+from product import Product, Electronics, Clothing
 from store import Store
 
 def list_products(store: Store):
@@ -40,11 +40,21 @@ def make_order(store: Store):
         print(f"Error: {e}")
 
 def main():
-    # Initialize the store with some products
-    bose = Product("Bose QuietComfort Earbuds", price=250, quantity=500)
-    mac = Product("MacBook Air M2", price=1450, quantity=100)
-    pixel = Product("Google Pixel 7", price=500, quantity=250)
-    store = Store([mac, bose, pixel])
+    # Initialize the store with some products including Electronics and Clothing
+    product_list = [
+        Electronics("MacBook Air M2", price=1450, quantity=100, warranty=12),
+        Product("Bose QuietComfort Earbuds", price=250, quantity=500),
+        Product("Google Pixel 7", price=500, quantity=250),
+        Clothing("T-Shirt", price=20, quantity=300, size="M", fabric="Cotton"),
+    ]
+
+    # Create the store instance with the product list
+    best_buy = Store(product_list)
+
+    # Display all products in the store
+    print("Products available in the store:")
+    for product in best_buy.get_all_products():
+        print(product.show())
 
     while True:
         print("\nStore Menu:")
@@ -56,11 +66,11 @@ def main():
         choice = input("Enter your choice (1-4): ")
 
         if choice == '1':
-            list_products(store)
+            list_products(best_buy)
         elif choice == '2':
-            show_total_quantity(store)
+            show_total_quantity(best_buy)
         elif choice == '3':
-            make_order(store)
+            make_order(best_buy)
         elif choice == '4':
             print("Goodbye!")
             break

@@ -1,3 +1,4 @@
+# products.py
 class Product:
     def __init__(self, name: str, price: float, quantity: int):
         if not name:
@@ -34,3 +35,24 @@ class Product:
         if quantity > self.quantity:
             raise ValueError("Not enough stock")
         self.set_quantity(self.quantity - quantity)
+
+
+# New Electronics class inheriting from Product
+class Electronics(Product):
+    def __init__(self, name: str, price: float, quantity: int, warranty: int):
+        super().__init__(name, price, quantity)
+        self.warranty = warranty  # warranty in months
+
+    def show(self) -> str:
+        return f"{self.name} (Electronics), Price: {self.price}, Quantity: {self.quantity}, Warranty: {self.warranty} months"
+
+
+# New Clothing class inheriting from Product
+class Clothing(Product):
+    def __init__(self, name: str, price: float, quantity: int, size: str, fabric: str):
+        super().__init__(name, price, quantity)
+        self.size = size
+        self.fabric = fabric
+
+    def show(self) -> str:
+        return f"{self.name} (Clothing), Price: {self.price}, Quantity: {self.quantity}, Size: {self.size}, Fabric: {self.fabric}"
