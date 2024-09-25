@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 
+
 class Product:
     def __init__(self, name: str, price: float, quantity: int):
         if not name:
@@ -29,7 +30,7 @@ class Product:
     def deactivate(self):
         self.active = False
 
-    def show(self) -> str:
+    def __str__(self) -> str:
         return f"{self.name}, Price: {self.price}, Quantity: {self.quantity}"
 
     def purchase(self, quantity: int):
@@ -48,6 +49,24 @@ class Product:
             return self.promotion.apply_promotion(quantity)
         return self.price * quantity  # No promotion applied
 
+    # Magic method for less than (<) comparison
+    def __lt__(self, other):
+        if not isinstance(other, Product):
+            raise ValueError("Can only compare Product objects")
+        return self.price < other.price
+
+    # Magic method for greater than (>) comparison
+    def __gt__(self, other):
+        if not isinstance(other, Product):
+            raise ValueError("Can only compare Product objects")
+        return self.price > other.price
+
+    # Optional: You can also add __eq__ to compare equality of prices
+    def __eq__(self, other):
+        if not isinstance(other, Product):
+            raise ValueError("Can only compare Product objects")
+        return self.price == other.price
+
 
 # New Electronics class inheriting from Product
 class Electronics(Product):
@@ -55,19 +74,23 @@ class Electronics(Product):
         super().__init__(name, price, quantity)
         self.warranty = warranty  # warranty in months
 
-    def show(self) -> str:
-        return f"{self.name} (Electronics), Price: {self.price}, Quantity: {self.quantity}, Warranty: {self.warranty} months"
+    def __str__(self) -> str:
+        return (f"{self.name} (Electronics), Price: {self.price}, "
+                f"Quantity: {self.quantity}, Warranty: {self.warranty} months")
 
 
 # New Clothing class inheriting from Product
 class Clothing(Product):
-    def __init__(self, name: str, price: float, quantity: int, size: str, fabric: str):
+    def __init__(self, name: str, price: float, quantity: int,
+                 size: str, fabric: str):
         super().__init__(name, price, quantity)
         self.size = size
         self.fabric = fabric
 
-    def show(self) -> str:
-        return f"{self.name} (Clothing), Price: {self.price}, Quantity: {self.quantity}, Size: {self.size}, Fabric: {self.fabric}"
+    def __str__(self) -> str:
+        return (f"{self.name} (Clothing), Price: {self.price}, "
+                f"Quantity: {self.quantity}, Size: {self.size}, "
+                f"Fabric: {self.fabric}")
 
 
 # Abstract class Promotion
@@ -83,7 +106,8 @@ class Promotion(ABC):
 
 # Derived class for percentage discount promotion
 class PercentageDiscountPromotion(Promotion):
-    def __init__(self, product: Product, quantity: int, discount_percentage: float):
+    def __init__(self, product: Product, quantity: int,
+                 discount_percentage: float):
         super().__init__(product, quantity)
         self.discount_percentage = discount_percentage
 
@@ -101,15 +125,18 @@ class BuyOneGetOnePromotion(Promotion):
     def apply_promotion(self) -> float:
         if self.product.get_quantity() < 2:
             return self.product.price * self.product.get_quantity()
-        return (self.product.price * (self.product.get_quantity() // 2 + self.product.get_quantity() % 2))
+        return (self.product.price *
+                (self.product.get_quantity() // 2 +
+                 self.product.get_quantity() % 2))
 
 
 # Derived class for fixed amount discount promotion
 class FixedAmountDiscountPromotion(Promotion):
-    def __init__(self, product: Product, quantity: int, discount_amount: float):
+    def __init__(self, product: Product, quantity: int,
+                 discount_amount: float):
         super().__init__(product, quantity)
         self.discount_amount = discount_amount
 
     def apply_promotion(self) -> float:
         total_price = self.product.price * self.quantity
-        return max(0, total_price - self.discount_amount)  # Ensure the price does not go negative
+        return max(0, total_price - self.discount_amount)  # Ensure no negative

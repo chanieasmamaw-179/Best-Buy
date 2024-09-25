@@ -1,6 +1,9 @@
 from product import Product, Electronics, Clothing
-from product import PercentageDiscountPromotion, BuyOneGetOnePromotion, FixedAmountDiscountPromotion
+from product import (
+    PercentageDiscountPromotion, BuyOneGetOnePromotion, FixedAmountDiscountPromotion
+)
 from store import Store
+
 
 def list_products(store: Store):
     """Lists all active products in the store."""
@@ -9,12 +12,14 @@ def list_products(store: Store):
         print("No active products in the store.")
     else:
         for product in products:
-            print(product.show())
+            print(product.__str__())
+
 
 def show_total_quantity(store: Store):
     """Shows the total quantity of all products in the store."""
     total_quantity = store.get_total_quantity()
     print(f"Total quantity in store: {total_quantity}")
+
 
 def make_order(store: Store):
     """Allows the user to place an order."""
@@ -40,6 +45,7 @@ def make_order(store: Store):
     except ValueError as e:
         print(f"Error: {e}")
 
+
 def apply_promotions():
     """Demonstrates the application of promotions."""
     # Example of applying promotions
@@ -57,7 +63,9 @@ def apply_promotions():
     promo3 = FixedAmountDiscountPromotion(product, quantity=3, discount_amount=10)
     print(f"Total after fixed discount: ${promo3.apply_promotion():.2f}")
 
+
 def main():
+    """Main function to setup the store and manage store menu."""
     # Setup initial stock of inventory
     product_list = [
         Product("MacBook Air M2", price=1450, quantity=100),
@@ -68,14 +76,18 @@ def main():
     ]
 
     # Create promotions
-    second_half_price = PercentageDiscountPromotion(product_list[0], quantity=1, discount_percentage=50)  # 50% off
+    second_half_price = PercentageDiscountPromotion(
+        product_list[0], quantity=1, discount_percentage=50
+    )  # 50% off
     third_one_free = BuyOneGetOnePromotion(product_list[1])  # Buy one get one free
-    fixed_discount = FixedAmountDiscountPromotion(product_list[2], quantity=2, discount_amount=50)  # $50 off
+    fixed_discount = FixedAmountDiscountPromotion(
+        product_list[2], quantity=2, discount_amount=50
+    )  # $50 off
 
     # Set promotions to products
     product_list[0].set_promotion(second_half_price)  # Apply to MacBook Air
     product_list[1].set_promotion(third_one_free)     # Apply to Bose Earbuds
-    product_list[2].set_promotion(fixed_discount)      # Apply to Google Pixel 7
+    product_list[2].set_promotion(fixed_discount)     # Apply to Google Pixel 7
 
     # Create the store instance with the product list
     best_buy = Store(product_list)
@@ -83,7 +95,18 @@ def main():
     # Display all products in the store
     print("Products available in the store:")
     for product in best_buy.get_all_products():
-        print(product.show())
+        print(product.__str__())
+
+    # Magic method tests
+    try:
+        product_list[0].price = -100  # This should raise an error
+    except ValueError as e:
+        print(f"Error setting price: {e}")  # Should print "Price cannot be negative"
+
+    print(product_list[0])  # Should print `MacBook Air M2, Price: $1450 Quantity:100`
+    print(product_list[0] > product_list[1])  # Should print True (MacBook price > Bose price)
+    print(product_list[0] in best_buy)  # Should print True (MacBook is in store)
+    print(Product("Google Pixel 7", price=500, quantity=250) in best_buy)  # Should print True
 
     while True:
         print("\nStore Menu:")
@@ -108,6 +131,7 @@ def main():
             break
         else:
             print("Invalid choice. Please enter a number between 1 and 5.")
+
 
 if __name__ == '__main__':
     main()

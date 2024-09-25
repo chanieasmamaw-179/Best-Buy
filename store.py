@@ -28,17 +28,22 @@ class Store:
 
     def get_total_quantity(self) -> int:
         """Returns the total quantity of all products in the store."""
-        total_quantity = sum(product.get_quantity() for product in self.products)
+        total_quantity = sum(
+            product.get_quantity() for product in self.products
+        )
         return total_quantity
 
     def get_all_products(self) -> List[Product]:
         """Returns a list of all active products in the store."""
-        active_products = [product for product in self.products if product.is_active()]
+        active_products = [
+            product for product in self.products if product.is_active()
+        ]
         return active_products
 
     def order(self, shopping_list: List[Tuple[Product, int]]) -> float:
         """Processes an order and returns the total price of the order."""
         total_price = 0.0
+
         for product, quantity in shopping_list:
             if not isinstance(product, Product):
                 raise TypeError("Expected an instance of Product")
@@ -46,7 +51,10 @@ class Store:
                 raise ValueError("Quantity cannot be negative")
             if quantity > product.get_quantity():
                 raise ValueError(
-                    f"Not enough stock for {product.name}. Requested: {quantity}, Available: {product.get_quantity()}")
+                    f"Not enough stock for {product.name}. "
+                    f"Requested: {quantity}, "
+                    f"Available: {product.get_quantity()}"
+                )
 
             # Deduct the quantity and update total price
             product.set_quantity(product.get_quantity() - quantity)
@@ -59,6 +67,10 @@ class Store:
         """Returns a string representation of all products in the store."""
         return "\n".join(product.show() for product in self.products)
 
+    def __contains__(self, product: Product) -> bool:
+        """Check if a product exists in the store using the 'in' operator."""
+        return product in self.products
+
 
 # Ensure this code only runs when the script is executed directly
 if __name__ == '__main__':
@@ -70,5 +82,10 @@ if __name__ == '__main__':
     # Add and remove products for testing
     store.add_product(Product("Google Pixel 7", price=500, quantity=250))
     store.remove_product(mac)
+
+    # Check if a product is in the store using the 'in' operator
+    print(bose in store)  # Output: True
+    print(mac in store)   # Output: False (after removal)
+
     store.order([(bose, 1), (bose, 2)])
     print(store.show_products())
