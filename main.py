@@ -22,72 +22,67 @@ def show_total_quantity(store: Store):
 
 
 def make_order(store: Store):
-    """Allows the user to place an order."""
+    """Allows the user to place an order by selecting products by ID."""
     shopping_list = []
+
+    # Display available products with IDs
+    print("Available products:")
+    for idx, product in enumerate(store.get_all_products(), start=1):
+        print(f"ID: {idx}, Name: {product.name}, Price: ${product.price}, Quantity Available: {product.quantity}")
+
     while True:
-        product_name = input("Enter product name (or type 'done' to finish): ")
-        if product_name.lower() == 'done':
+        product_id = input("Enter product ID (or type 'done' to finish): ")
+        if product_id.lower() == 'done':
             break
 
-        quantity = int(input(f"Enter quantity for {product_name}: "))
+        try:
+            product_id = int(product_id)
+            if product_id < 1 or product_id > len(store.get_all_products()):
+                print("Invalid product ID. Please try again.")
+                continue
+            quantity = int(input("Enter quantity: "))
 
-        # Find the product
-        product = next((p for p in store.get_all_products() if p.name == product_name), None)
-        if not product:
-            print(f"Product '{product_name}' not found.")
-            continue
+            # Fetch the selected product
+            product = store.get_all_products()[product_id - 1]
+            if quantity > product.quantity:
+                print(f"Only {product.quantity} available for {product.name}. Try again.")
+                continue
 
-        shopping_list.append((product, quantity))
+            shopping_list.append((product, quantity))
+        except ValueError:
+            print("Invalid input. Please enter numeric values for product ID and quantity.")
 
-    try:
-        total_price = store.order(shopping_list)
-        print(f"Total price of the order: ${total_price:.2f}")
-    except ValueError as e:
-        print(f"Error: {e}")
-
-
-def apply_promotions():
-    """Demonstrates the application of promotions."""
-    # Example of applying promotions
-    product = Product("T-Shirt", price=20, quantity=10)
-
-    # Percentage discount
-    promo1 = PercentageDiscountPromotion(product, quantity=3, discount_percentage=30)
-    print(f"Total after percentage discount: ${promo1.apply_promotion():.2f}")
-
-    # Buy one get one free
-    promo2 = BuyOneGetOnePromotion(product)
-    print(f"Total after BOGO: ${promo2.apply_promotion():.2f}")
-
-    # Fixed amount discount
-    promo3 = FixedAmountDiscountPromotion(product, quantity=3, discount_amount=10)
-    print(f"Total after fixed discount: ${promo3.apply_promotion():.2f}")
+    if shopping_list:
+        try:
+            total_price = store.order(shopping_list)
+            print(f"Total price of the order: ${total_price:.2f}")
+        except ValueError as e:
+            print(f"Error: {e}")
+    else:
+        print("No items added to the shopping list.")
 
 
 def main():
     """Main function to setup the store and manage store menu."""
-    # Setup initial stock of inventory
+    # Setup initial stock of inventory and apply promotions directly during creation
     product_list = [
         Product("MacBook Air M2", price=1450, quantity=100),
         Product("Bose QuietComfort Earbuds", price=250, quantity=500),
         Product("Google Pixel 7", price=500, quantity=250),
-        Product("Windows License", price=125, quantity=10),  # Ensure quantity is set
+        Product("Windows License", price=125, quantity=10),
         Product("Shipping", price=10, quantity=250),
     ]
 
-    # Create promotions
-    second_half_price = PercentageDiscountPromotion(
-        product_list[0], quantity=1, discount_percentage=50
-    )  # 50% off
-    third_one_free = BuyOneGetOnePromotion(product_list[1])  # Buy one get one free
-    fixed_discount = FixedAmountDiscountPromotion(
-        product_list[2], quantity=2, discount_amount=50
-    )  # $50 off
-
-    # Set promotions to products
-    product_list[0].set_promotion(second_half_price)  # Apply to MacBook Air
-    product_list[1].set_promotion(third_one_free)     # Apply to Bose Earbuds
-    product_list[2].set_promotion(fixed_discount)     # Apply to Google Pixel 7
+    # Apply promotions directly on product creation
+    product_list[0].set_promotion(
+        PercentageDiscountPromotion(product_list[0], quantity=1, discount_percentage=25))  # 25% off MacBook Air
+    product_list[1].set_promotion(BuyOneGetOnePromotion(product_list[1]))  # Buy One Get One for Bose Earbuds
+    product_list[2].set_promotion(
+        FixedAmountDiscountPromotion(product_list[2], quantity=2, discount_amount=50))  # $50 off Google Pixel
+    product_list[3].set_promotion(
+        PercentageDiscountPromotion(product_list[3], quantity=1, discount_percentage=20))  # 20% off Windows License
+    product_list[4].set_promotion(FixedAmountDiscountPromotion(product_list[4], quantity=10,
+                                                               discount_amount=5))  # $5 off Shipping for 10 units or more
 
     # Create the store instance with the product list
     best_buy = Store(product_list)
@@ -97,26 +92,14 @@ def main():
     for product in best_buy.get_all_products():
         print(product.__str__())
 
-    # Magic method tests
-    try:
-        product_list[0].price = -100  # This should raise an error
-    except ValueError as e:
-        print(f"Error setting price: {e}")  # Should print "Price cannot be negative"
-
-    print(product_list[0])  # Should print `MacBook Air M2, Price: $1450 Quantity:100`
-    print(product_list[0] > product_list[1])  # Should print True (MacBook price > Bose price)
-    print(product_list[0] in best_buy)  # Should print True (MacBook is in store)
-    print(Product("Google Pixel 7", price=500, quantity=250) in best_buy)  # Should print True
-
     while True:
         print("\nStore Menu:")
         print("1. List all products in store")
         print("2. Show total amount in store")
         print("3. Make an order")
-        print("4. Apply promotions")
-        print("5. Quit")
+        print("4. Quit")
 
-        choice = input("Enter your choice (1-5): ")
+        choice = input("Enter your choice (1-4): ")
 
         if choice == '1':
             list_products(best_buy)
@@ -125,12 +108,10 @@ def main():
         elif choice == '3':
             make_order(best_buy)
         elif choice == '4':
-            apply_promotions()
-        elif choice == '5':
             print("Goodbye!")
             break
         else:
-            print("Invalid choice. Please enter a number between 1 and 5.")
+            print("Invalid choice. Please enter a number between 1 and 4.")
 
 
 if __name__ == '__main__':
