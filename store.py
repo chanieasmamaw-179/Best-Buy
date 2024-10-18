@@ -42,8 +42,6 @@ class Store:
 
     def order(self, shopping_list: List[Tuple[Product, int]]) -> float:
         """Processes an order and returns the total price of the order."""
-        total_price = 0.0
-
         for product, quantity in shopping_list:
             if not isinstance(product, Product):
                 raise TypeError("Expected an instance of Product")
@@ -56,12 +54,9 @@ class Store:
                     f"Available: {product.get_quantity()}"
                 )
 
-            # Deduct the quantity and update total price
+            # Deduct the quantity
             product.set_quantity(product.get_quantity() - quantity)
-            total_price += product.price * quantity
 
-        print(f"Total price of the order: ${total_price:.2f}")
-        return total_price
 
     def show_products(self) -> str:
         """Returns a string representation of all products in the store."""

@@ -46,29 +46,10 @@ class Product:
     def apply_promotion(self, quantity: int) -> float:
         """Apply the promotion to the product if it exists."""
         if self.promotion:
-            return self.promotion.apply_promotion(quantity)
+            return self.promotion.apply_promotion(quantity)  # Pass quantity
         return self.price * quantity  # No promotion applied
 
-    # Magic method for less than (<) comparison
-    def __lt__(self, other):
-        if not isinstance(other, Product):
-            raise ValueError("Can only compare Product objects")
-        return self.price < other.price
 
-    # Magic method for greater than (>) comparison
-    def __gt__(self, other):
-        if not isinstance(other, Product):
-            raise ValueError("Can only compare Product objects")
-        return self.price > other.price
-
-    # Optional: You can also add __eq__ to compare equality of prices
-    def __eq__(self, other):
-        if not isinstance(other, Product):
-            raise ValueError("Can only compare Product objects")
-        return self.price == other.price
-
-
-# New Electronics class inheriting from Product
 class Electronics(Product):
     def __init__(self, name: str, price: float, quantity: int, warranty: int):
         super().__init__(name, price, quantity)
@@ -79,10 +60,8 @@ class Electronics(Product):
                 f"Quantity: {self.quantity}, Warranty: {self.warranty} months")
 
 
-# New Clothing class inheriting from Product
 class Clothing(Product):
-    def __init__(self, name: str, price: float, quantity: int,
-                 size: str, fabric: str):
+    def __init__(self, name: str, price: float, quantity: int, size: str, fabric: str):
         super().__init__(name, price, quantity)
         self.size = size
         self.fabric = fabric
@@ -93,50 +72,37 @@ class Clothing(Product):
                 f"Fabric: {self.fabric}")
 
 
-# Abstract class Promotion
 class Promotion(ABC):
-    def __init__(self, product: Product, quantity: int):
+    def __init__(self, product: Product):
         self.product = product
-        self.quantity = quantity
 
     @abstractmethod
-    def apply_promotion(self) -> float:
+    def apply_promotion(self, quantity: int) -> float:
         pass
 
 
-# Derived class for percentage discount promotion
-class PercentageDiscountPromotion(Promotion):
-    def __init__(self, product: Product, quantity: int,
-                 discount_percentage: float):
-        super().__init__(product, quantity)
-        self.discount_percentage = discount_percentage
+class SecondHalfPrice(Promotion):
+    """Every second product is half price."""
+    def apply_promotion(self, quantity: int) -> float:
+        full_price_items = (quantity + 1) // 2  # First half are full price
+        half_price_items = quantity // 2  # Second half are half price
+        return (full_price_items * self.product.price) + (half_price_items * self.product.price * 0.5)
 
-    def apply_promotion(self) -> float:
-        total_price = self.product.price * self.quantity
-        discount_amount = total_price * (self.discount_percentage / 100)
+
+class ThirdOneFree(Promotion):
+    """Every third product is free."""
+    def apply_promotion(self, quantity: int) -> float:
+        paid_items = quantity - (quantity // 3)  # Subtract every third item
+        return paid_items * self.product.price
+
+
+class PercentDiscount(Promotion):
+    """Applies a percentage discount to the product."""
+    def __init__(self, product: Product, percent: float):
+        super().__init__(product)
+        self.percent = percent
+
+    def apply_promotion(self, quantity: int) -> float:
+        total_price = self.product.price * quantity
+        discount_amount = total_price * (self.percent / 100)
         return total_price - discount_amount
-
-
-# Derived class for buy one get one free promotion
-class BuyOneGetOnePromotion(Promotion):
-    def __init__(self, product: Product):
-        super().__init__(product, 0)  # Quantity not needed here
-
-    def apply_promotion(self) -> float:
-        if self.product.get_quantity() < 2:
-            return self.product.price * self.product.get_quantity()
-        return (self.product.price *
-                (self.product.get_quantity() // 2 +
-                 self.product.get_quantity() % 2))
-
-
-# Derived class for fixed amount discount promotion
-class FixedAmountDiscountPromotion(Promotion):
-    def __init__(self, product: Product, quantity: int,
-                 discount_amount: float):
-        super().__init__(product, quantity)
-        self.discount_amount = discount_amount
-
-    def apply_promotion(self) -> float:
-        total_price = self.product.price * self.quantity
-        return max(0, total_price - self.discount_amount)  # Ensure no negative

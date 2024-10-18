@@ -1,7 +1,4 @@
-from product import Product, Electronics, Clothing
-from product import (
-    PercentageDiscountPromotion, BuyOneGetOnePromotion, FixedAmountDiscountPromotion
-)
+from product import Product, Electronics, Clothing, SecondHalfPrice, ThirdOneFree, PercentDiscount
 from store import Store
 
 
@@ -12,7 +9,7 @@ def list_products(store: Store):
         print("No active products in the store.")
     else:
         for product in products:
-            print(product.__str__())
+            print(product)
 
 
 def show_total_quantity(store: Store):
@@ -54,8 +51,31 @@ def make_order(store: Store):
 
     if shopping_list:
         try:
-            total_price = store.order(shopping_list)
-            print(f"Total price of the order: ${total_price:.2f}")
+            total_price = 0.0
+            original_price = 0.0  # To track the price without discounts
+            total_discount = 0.0  # To track the total discount
+
+            for product, quantity in shopping_list:
+                original_price_for_item = product.price * quantity  # Calculate the price without discount
+                discounted_price_for_item = product.apply_promotion(quantity)  # Calculate the price with discount
+
+                original_price += original_price_for_item
+                total_price += discounted_price_for_item
+
+                # Calculate the discount for this product and add it to total discount
+                discount_for_item = original_price_for_item - discounted_price_for_item
+                total_discount += discount_for_item
+
+                # Print product-wise discount if any
+                if discount_for_item > 0:
+                    print(f"Discount applied on {product.name}: You saved ${discount_for_item:.2f}")
+
+            # Print final total with discount summary
+            print(f"\nOriginal total price (without discounts): ${original_price:.2f}")
+            print(f"Total discount applied: ${total_discount:.2f}")
+            print(f"Total price after discounts: ${total_price:.2f}")
+
+            store.order(shopping_list)  # Proceed with the order
         except ValueError as e:
             print(f"Error: {e}")
     else:
@@ -64,7 +84,8 @@ def make_order(store: Store):
 
 def main():
     """Main function to setup the store and manage store menu."""
-    # Setup initial stock of inventory and apply promotions directly during creation
+
+    # Setup initial stock of inventory
     product_list = [
         Product("MacBook Air M2", price=1450, quantity=100),
         Product("Bose QuietComfort Earbuds", price=250, quantity=500),
@@ -73,16 +94,15 @@ def main():
         Product("Shipping", price=10, quantity=250),
     ]
 
-    # Apply promotions directly on product creation
-    product_list[0].set_promotion(
-        PercentageDiscountPromotion(product_list[0], quantity=1, discount_percentage=25))  # 25% off MacBook Air
-    product_list[1].set_promotion(BuyOneGetOnePromotion(product_list[1]))  # Buy One Get One for Bose Earbuds
-    product_list[2].set_promotion(
-        FixedAmountDiscountPromotion(product_list[2], quantity=2, discount_amount=50))  # $50 off Google Pixel
-    product_list[3].set_promotion(
-        PercentageDiscountPromotion(product_list[3], quantity=1, discount_percentage=20))  # 20% off Windows License
-    product_list[4].set_promotion(FixedAmountDiscountPromotion(product_list[4], quantity=10,
-                                                               discount_amount=5))  # $5 off Shipping for 10 units or more
+    # Create promotion catalog
+    second_half_price = SecondHalfPrice(product_list[0])  # Promotion for MacBook
+    third_one_free = ThirdOneFree(product_list[1])  # Promotion for Bose Earbuds
+    thirty_percent = PercentDiscount(product_list[3], 30)  # 30% off Windows License
+
+    # Add promotions to products
+    product_list[0].set_promotion(second_half_price)
+    product_list[1].set_promotion(third_one_free)
+    product_list[3].set_promotion(thirty_percent)
 
     # Create the store instance with the product list
     best_buy = Store(product_list)
@@ -92,6 +112,7 @@ def main():
     for product in best_buy.get_all_products():
         print(product.__str__())
 
+    # Menu loop for store operations
     while True:
         print("\nStore Menu:")
         print("1. List all products in store")
